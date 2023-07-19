@@ -8,6 +8,7 @@
 package main
 
 import (
+	_ "github.com/cerbos/protoc-gen-go-hashpb"      // go.mod
 	_ "github.com/planetscale/vtprotobuf/generator" // go.mod
 	_ "golang.org/x/tools/cmd/goimports"            // go.mod
 	_ "honnef.co/go/tools/cmd/staticcheck"          // go.mod

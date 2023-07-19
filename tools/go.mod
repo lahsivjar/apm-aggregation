@@ -3,6 +3,7 @@ module github.com/elastic/apm-aggregation/tools
 go 1.19
 
 require (
+	github.com/cerbos/protoc-gen-go-hashpb v0.2.0
 	github.com/elastic/go-licenser v0.4.1
 	github.com/planetscale/vtprotobuf v0.4.0
 	golang.org/x/tools v0.9.3

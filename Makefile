@@ -26,6 +26,7 @@ GOOSBUILD:=$(GITROOT)/build/$(shell go env GOOS)
 PROTOC=$(GOOSBUILD)/protoc/bin/protoc
 PROTOC_GEN_GO_VTPROTO=$(GOOSBUILD)/protoc-gen-go-vtproto
 PROTOC_GEN_GO=$(GOOSBUILD)/protoc-gen-go
+PROTOC_GEN_GO_HASHPB=$(GOOSBUILD)/protoc-gen-go-hashpb
 
 $(PROTOC):
 	@./tools/install-protoc.sh
@@ -36,15 +37,21 @@ $(PROTOC_GEN_GO_VTPROTO): $(GITROOT)/tools/go.mod
 $(PROTOC_GEN_GO): $(GITROOT)/tools/go.mod
 	go build -o $@ -modfile=$< google.golang.org/protobuf/cmd/protoc-gen-go
 
+$(PROTOC_GEN_GO_HASHPB): $(GITROOT)/tools/go.mod
+	go build -o $@ -modfile=$< github.com/cerbos/protoc-gen-go-hashpb
+
+
 PROTOC_OUT?=.
 
 .PHONY: gen-proto
-gen-proto: $(PROTOC_GEN_GO) $(PROTOC_GEN_GO_VTPROTO) $(PROTOC)
+gen-proto: $(PROTOC_GEN_GO_HASHPB) $(PROTOC_GEN_GO) $(PROTOC_GEN_GO_VTPROTO) $(PROTOC)
 	$(eval STRUCTS := $(shell grep '^message' proto/*.proto | cut -d ' ' -f2))
 	$(eval PROTOC_VT_STRUCTS := $(shell for s in $(STRUCTS); do echo --go-vtproto_opt=pool=./aggregationpb.$$s ;done))
 	$(PROTOC) -I . --go_out=$(PROTOC_OUT) --plugin protoc-gen-go="$(PROTOC_GEN_GO)" \
 	--go-vtproto_out=$(PROTOC_OUT) --plugin protoc-gen-go-vtproto="$(PROTOC_GEN_GO_VTPROTO)" \
 	--go-vtproto_opt=features=marshal+unmarshal+size+pool \
+	--go-hashpb_out=$(PROTOC_OUT) --plugin protoc-gen-go-hashpb="$(PROTOC_GEN_GO_HASHPB)" \
 	$(PROTOC_VT_STRUCTS) \
 	$(wildcard proto/*.proto)
+	mv proto/hashpb_helpers.pb.go aggregationpb/hashpb_helpers.pb.go # TODO @lahsivjar: Fix this
 	$(MAKE) fmt
